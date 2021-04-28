@@ -33,10 +33,10 @@ var
 
 begin
 
-  lPdf := TPdfDocument.Create; // создали документ
-  lPdf.Info.Author := 'User'; // задали автора
-  lPdf.Info.CreationDate := Now; // задали дату создания документа
-  lPdf.DefaultPaperSize := psA4; // указали формат страниц (А4)
+  lPdf := TPdfDocument.Create; // Create the document
+  lPdf.Info.Author := 'User'; // Author
+  lPdf.Info.CreationDate := Now;
+  lPdf.DefaultPaperSize := psA4; // Paper size
   Form2.ProgressBar1.Min := 1;
   Form2.ProgressBar1.Max := PageNum - 1;
 
@@ -76,7 +76,6 @@ begin
   end;
   isDownload := false;
   MyThread.DoTerminate;
-  // Здесь описывается код, который будет выполняться в потоке
 end;
 
 procedure AuthMeth;
@@ -127,14 +126,14 @@ begin
 
   if html <> '' then
   begin
-    // ===================================Поиск айди====================================
+    // ===================================Search for id====================================
     idStartPos := Pos('plugins/Viewer/getDoc.php?id=', html) + 30;
     // Поиск id в html-ке
     idStopPos := PosEx(char(39), html, idStartPos);
     // Char(39) - знак одинарной кавычки
     idNum := StrToInt(Copy(html, idStartPos, idStopPos - idStartPos));
 
-    // ====================================Поиск количества страниц=====================
+    // ====================================Search for page quantity=====================
 
     pageStartPos := Pos(char(39) + 'PageCount' + char(39) + ':' + char(39),
       html) + 13; // Поиск id в html-ке
@@ -142,7 +141,7 @@ begin
     // Char(39) - знак одинарной кавычки
     PageNum := StrToInt((Copy(html, pageStartPos, pageStopPos - pageStartPos)));
 
-    // =====================================Поиск названия===============================
+    // =====================================Search for name===============================
     titleStartPos := Pos('&mdash;', html) + 8;
     title := ((Copy(html, titleStartPos, 10)));
 
@@ -183,7 +182,6 @@ begin
   MyThread.DoTerminate;
 end;
 
-// Нужно создать процедуру Execute, уже описанную в классе TMyThread
 procedure TMyThread.Execute;
 
 begin

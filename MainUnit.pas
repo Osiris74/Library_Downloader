@@ -57,9 +57,9 @@ type
 
 var
   Form2: TForm2;
-  idNum: Integer; // Номер Id
-  pageNum: Integer; // Количество страниц в книге
-  title: String; // Название книги
+  idNum: Integer;   //  Id
+  pageNum: Integer; // Quantity of pages
+  title: String;    //Book name
   Msg: TIdMessage;
   dataName: String;
   newPassword, login, password: String;
@@ -86,16 +86,16 @@ begin
     begin
       temp := Ord(password[i]);
 
-      if (temp < 1088) or (temp > 1103) then // Значения символов E0 и EF
+      if (temp < 1088) or (temp > 1103) then // Ord number of E0 and EF
       begin
         pasBytes[i] := '%D0%' + IntToHex(((temp) - 896), 2);
-        // + 128 - 1024 для шифрования
+        // + 128 - 1024 for cipher
         newPassword := newPassword + pasBytes[i];
       end
       else
       begin
         pasBytes[i] := '%D1%' + IntToHex(((temp) - 960), 2);
-        // +64 -1024 для шифрования
+        // +64 -1024 for cipher
         newPassword := newPassword + pasBytes[i];
       end;
     end;
@@ -108,7 +108,7 @@ begin
 
   end
   else
-    ShowMessage('Заполните логин и пароль');
+    ShowMessage('Fill login and password');
 end;
 
 procedure TForm2.GetButClick(Sender: TObject);
