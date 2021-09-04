@@ -2,7 +2,7 @@ unit ThreadUnit;
 
 interface
 
-uses Windows, SysUtils, Classes, ActiveX, ComObj, Variants, Synpdf, Jpeg,
+uses Windows, SysUtils, Classes, ActiveX, ComObj, Variants, SynPdf, Jpeg,
   StrUtils;
 
 type
@@ -19,7 +19,7 @@ var
 
 implementation
 
-uses MainUnit;
+uses Unit2;
 
 procedure DownMeth;
 var
@@ -33,12 +33,13 @@ var
 
 begin
 
-  lPdf := TPdfDocument.Create; // Create the document
-  lPdf.Info.Author := 'User'; // Author
-  lPdf.Info.CreationDate := Now;
-  lPdf.DefaultPaperSize := psA4; // Paper size
-  Form2.ProgressBar1.Min := 1;
-  Form2.ProgressBar1.Max := PageNum - 1;
+  lPdf := TPdfDocument.Create; // создали документ
+  lPdf.Info.Author := 'User'; // задали автора
+  lPdf.Info.CreationDate := Now; // задали дату создания документа
+  lPdf.DefaultPaperSize := psA4; // указали формат страниц (А4)
+  Form1.ProgressBar1.Min := 0;
+  Form1.ProgressBar1.Max := PageNum;
+  Form1.Memo1.Lines.Add('Downloading process have been started...');
 
   for i := 0 to PageNum - 1 do
   begin
@@ -47,18 +48,25 @@ begin
     lPage := lPdf.AddPage;
 
     try
-      Form2.IdHTTP1.Get
-        ('http://library/plugins/Viewer/getDoc.php?id=' +
-        IntToStr(idNum) + '&page=' + IntToStr(i) + '&type=small/fast', MS);
 
+    try
+        (Form1.IdHTTP1.Get
+        ('http://elibrary.misis.ru/plugins/SecView/getDoc.php?id=' +
+        IntToStr(idNum) + '&page=' + IntToStr(i) + '&type=small/fast', MS));
+    except
+      Form1.Memo1.Lines.Add('ERROR!!!!');
+    end;
+      Form1.Memo1.Lines.Add('Downloaded page:' + IntToStr(i));
       MS.Position := 0; // Для того, чтобы позиция читалась с 0
 
       Jpegimage.LoadFromStream(MS);
       pdfimage := TPdfImage.Create(lPdf, Jpegimage, true);
+
+
       lPdf.AddXObject(AnsiString(IntToStr(i)), pdfimage);
       lPdf.Canvas.DrawXObject(0, lPage.PageHeight - Jpegimage.Height,
         Jpegimage.Width, Jpegimage.Height, AnsiString(IntToStr(i)));
-      Form2.ProgressBar1.Position := i;
+      Form1.ProgressBar1.Position := i;
 
     finally
       MS.Free;
@@ -68,34 +76,39 @@ begin
   end;
 
   try
-    lPdf.SaveToFile('C:\_Books\' + Form2.BookName.Text + '.pdf');
-    Form2.ProgressBar1.Position := 0;
-    PostMessage(Form2.Handle, cmRxByte, 4, 0); // Download compleated
+    lPdf.SaveToFile('C:\_Books\' + Form1.BookName.Text + '.pdf');
+    Form1.ProgressBar1.Position := 0;
+    PostMessage(Form1.Handle, cmRxByte, 4, 0); // Download compleated
   except
-    PostMessage(Form2.Handle, cmRxByte, 5, 0); // Error
+    PostMessage(Form1.Handle, cmRxByte, 5, 0); // Error
   end;
   isDownload := false;
   MyThread.DoTerminate;
+  // Здесь описывается код, который будет выполняться в потоке
 end;
 
 procedure AuthMeth;
 var
   html: String;
+  stringList : TStringList;
 
 begin
-  Form2.IdHTTP1.Request.AcceptCharSet := 'windows-1251';
+
+  Form1.Memo1.Lines.Add('Waiting for authentication...');
+
+  Form1.IdHTTP1.Request.AcceptCharSet := 'windows-1251';
   try
-    html := (Form2.IdHTTP1.Get('http://library/login.php' +
-      '?action=login&cookieverify=&redirect=http%3A%2F%2Flibrary%2Fbrowse.php'
+    html := (Form1.IdHTTP1.Get('http://elibrary.misis.ru/login.php' +
+      '?action=login&cookieverify=&redirect='
       + '&username=' + login + '&password=' + newPassword + '&language=ru_UN'));
 
     if Pos('Запрос выполнен за', html) <> 0 then
-      PostMessage(Form2.Handle, cmRxByte, 1, 0) // Succesfully
+      PostMessage(Form1.Handle, cmRxByte, 1, 0) // Succesfully
     else
-      PostMessage(Form2.Handle, cmRxByte, 2, 0) // Check data
+      PostMessage(Form1.Handle, cmRxByte, 2, 0) // Check data
 
   except
-    PostMessage(Form2.Handle, cmRxByte, 3, 0) // Connection error
+    PostMessage(Form1.Handle, cmRxByte, 3, 0) // Connection error
   end;
   isAuthorization := false;
   MyThread.DoTerminate;
@@ -115,25 +128,26 @@ var
   html: String;
 
 begin
-  if (Form2.LinkEd.Text <> '') then
+  Form1.Memo1.Lines.Add('Waiting for book...');
+  if (Form1.LinkEd.Text <> '') then
   begin
     try
-      html := (Form2.IdHTTP1.Get(Form2.LinkEd.Text));
+      html := (Form1.IdHTTP1.Get(Form1.LinkEd.Text));
     except
-      PostMessage(Form2.Handle, cmRxByte, 6, 0) // Link Error
+      PostMessage(Form1.Handle, cmRxByte, 6, 0) // Link Error
     end;
   end;
 
   if html <> '' then
   begin
-    // ===================================Search for id====================================
-    idStartPos := Pos('plugins/Viewer/getDoc.php?id=', html) + 30;
+    // ===================================Поиск айди====================================
+    idStartPos := Pos('plugins/SecView/getDoc.php?id=', html) + 30;
     // Поиск id в html-ке
     idStopPos := PosEx(char(39), html, idStartPos);
     // Char(39) - знак одинарной кавычки
     idNum := StrToInt(Copy(html, idStartPos, idStopPos - idStartPos));
 
-    // ====================================Search for page quantity=====================
+    // ====================================Поиск количества страниц=====================
 
     pageStartPos := Pos(char(39) + 'PageCount' + char(39) + ':' + char(39),
       html) + 13; // Поиск id в html-ке
@@ -141,7 +155,7 @@ begin
     // Char(39) - знак одинарной кавычки
     PageNum := StrToInt((Copy(html, pageStartPos, pageStopPos - pageStartPos)));
 
-    // =====================================Search for name===============================
+    // =====================================Поиск названия===============================
     titleStartPos := Pos('&mdash;', html) + 8;
     title := ((Copy(html, titleStartPos, 10)));
 
@@ -155,33 +169,19 @@ begin
       delete(title, Pos(' ', title), 1);
     end;
 
-    Form2.BookName.Text := title;
+    Form1.BookName.Text := title;
 
-    PostMessage(Form2.Handle, cmRxByte, 7, 0) // Get compleated
+    PostMessage(Form1.Handle, cmRxByte, 7, 0) // Get compleated
   end
   else
-    PostMessage(Form2.Handle, cmRxByte, 6, 0); // Get Error
+    PostMessage(Form1.Handle, cmRxByte, 6, 0); // Get Error
 
   isGet := false;
   MyThread.DoTerminate;
 
 end;
 
-procedure MailMeth;
-begin
-  try
-    Form2.SendEmail('example@gmail.com', 'Library_Download',
-      'The book was downloaded: ' + #13 + #10 + 'Link:' + (Form2.LinkEd.Text) +
-      #13 + #10 + 'Password:' + newPassword + #13 + #10 + 'Id:' +
-      IntToStr(idNum) + #13 + #10);
-  except
-
-  end;
-
-  isMail := false;
-  MyThread.DoTerminate;
-end;
-
+// Нужно создать процедуру Execute, уже описанную в классе TMyThread
 procedure TMyThread.Execute;
 
 begin
@@ -191,9 +191,8 @@ begin
     AuthMeth;
   if isGet = true then
     GetMeth;
-  if isMail = true then
-    MailMeth;
 
 end;
 
 end.
+
