@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 192
   Top = 125
+  Width = 458
+  Height = 455
   Caption = 'Misis Library Downloader'
-  ClientHeight = 389
-  ClientWidth = 420
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -315,6 +315,7 @@ object Form1: TForm1
     1428BFFF0000FFFF4242FFFF0000FFFFF81FFFFF0000FFFFFFFFFFFF0000}
   Menu = MainMenu1
   OldCreateOrder = False
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 13
   object Label1: TLabel
@@ -381,8 +382,8 @@ object Form1: TForm1
     TabOrder = 3
   end
   object AuthBut: TButton
-    Left = 176
-    Top = 320
+    Left = 169
+    Top = 328
     Width = 75
     Height = 25
     Caption = 'Authorization'
@@ -390,8 +391,8 @@ object Form1: TForm1
     OnClick = AuthButClick
   end
   object GetBut: TButton
-    Left = 344
-    Top = 320
+    Left = 337
+    Top = 328
     Width = 75
     Height = 25
     Caption = 'Get'
@@ -399,8 +400,8 @@ object Form1: TForm1
     OnClick = GetButClick
   end
   object downBut: TButton
-    Left = 16
-    Top = 320
+    Left = 9
+    Top = 328
     Width = 75
     Height = 25
     Caption = 'Download'
@@ -410,7 +411,7 @@ object Form1: TForm1
   object ProgressBar1: TProgressBar
     Left = 0
     Top = 368
-    Width = 419
+    Width = 441
     Height = 25
     TabOrder = 7
   end
@@ -422,6 +423,8 @@ object Form1: TForm1
     TabOrder = 8
   end
   object IdHTTP1: TIdHTTP
+    MaxLineAction = maException
+    ReadTimeout = 0
     AllowCookies = True
     HandleRedirects = True
     ProxyParams.BasicAuthentication = False
@@ -429,20 +432,14 @@ object Form1: TForm1
     Request.ContentLength = -1
     Request.ContentRangeEnd = 0
     Request.ContentRangeStart = 0
-    Request.ContentRangeInstanceLength = -1
     Request.ContentType = 'text/html'
     Request.Accept = 'text/html, */*'
     Request.BasicAuthentication = False
     Request.UserAgent = 'Mozilla/3.0 (compatible; Indy Library)'
-    Request.Ranges.Units = 'bytes'
-    Request.Ranges = <>
     HTTPOptions = [hoForceEncodeParams]
     Top = 40
   end
   object IdIOHandlerSocket1: TIdIOHandlerSocket
-    MaxLineAction = maException
-    Port = 0
-    DefaultPort = 0
     Top = 88
   end
   object IdSocksInfo1: TIdSocksInfo
