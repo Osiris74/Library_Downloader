@@ -7,7 +7,7 @@ uses
   Dialogs, IdMessage, IdSocks, IdServerIOHandler, IdSSLOpenSSL,
   IdIOHandler, IdIOHandlerSocket, IdBaseComponent, IdComponent,
   IdTCPConnection, IdTCPClient, IdHTTP, StdCtrls, ComCtrls,
-  IdCustomTransparentProxy, Vcl.Menus;
+  Menus;
 
   const
   cmRxByte = wm_User + $55;
@@ -45,6 +45,7 @@ type
     procedure Exit1Click(Sender: TObject);
     procedure About1Click(Sender: TObject);
     procedure Help1Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
 
   private
     { Private declarations }
@@ -114,8 +115,8 @@ begin
     isAuthorization := true;
     MyThread := TMyThread.Create(true);
     MyThread.FreeOnTerminate := true;
-    MyThread.Priority := tpLower;
-    MyThread.Start
+    MyThread.Priority := tpNormal;
+    MyThread.Resume;
 
   end
   else
@@ -127,8 +128,8 @@ begin
   isGet := true;
   MyThread := TMyThread.Create(true);
   MyThread.FreeOnTerminate := true;
-  MyThread.Priority := tpLower;
-  MyThread.Start;
+  MyThread.Priority := tpNormal;
+  MyThread.Resume;
 
 end;
 
@@ -147,8 +148,8 @@ begin
     isDownload := true;
     MyThread := TMyThread.Create(true);
     MyThread.FreeOnTerminate := true;
-    MyThread.Priority := tpLower;
-    MyThread.Start;
+    MyThread.Priority := tpNormal;
+    MyThread.Resume;
 
   end
   else
@@ -159,6 +160,12 @@ end;
 procedure TForm1.Exit1Click(Sender: TObject);
 begin
   Application.Terminate;
+end;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  if not DirectoryExists('C:\_Books') then
+    CreateDir('C:\_Books');
 end;
 
 procedure TForm1.RecivBytes(var Msg: TMessage); // Messages from second thread
@@ -195,7 +202,7 @@ begin
         isMail := true;
         MyThread := TMyThread.Create(true);
         MyThread.FreeOnTerminate := true;
-        MyThread.Priority := tpLower;
+        MyThread.Priority := tpNormal;
         MyThread.Resume;
         Application.ProcessMessages;
       end;
